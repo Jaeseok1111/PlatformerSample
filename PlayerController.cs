@@ -28,15 +28,13 @@ public class PlayerController : MonoBehaviour
     // 매 프레임 마다 실행되는 함수
     private void Update()
     {
-        float horizontal = Input.GetAxis("Horizontal");
-        transform.position += 
-            new Vector3(horizontal, 0f, 0f) * moveSpeed * Time.deltaTime;
-
-        bool isRunning = horizontal != 0f;
+        velocity.x = Input.GetAxis("Horizontal") * moveSpeed;
+        
+        bool isRunning = velocity.x != 0f;
 
         if (isRunning)
         {
-            spriteRenderer.flipX = horizontal < 0f;
+            spriteRenderer.flipX = velocity.x < 0f;
         }
 
         animator.SetBool("Running", isRunning);
@@ -49,7 +47,11 @@ public class PlayerController : MonoBehaviour
         velocity += Physics2D.gravity * Time.deltaTime;
 
         var deltaPosition = velocity * Time.deltaTime;
-        var move = Vector2.up * deltaPosition.y;
+        var move = new Vector2(deltaPosition.x, 0f);
+
+        Movement(move);
+
+        move = Vector2.up * deltaPosition.y;
 
         Movement(move);
 
@@ -64,7 +66,7 @@ public class PlayerController : MonoBehaviour
         {
             // 지면 체크
             RaycastHit2D[] hitBuffer = new RaycastHit2D[10];
-            int hitCount = rigidBody.Cast(move, contactFilter, hitBuffer, distance);
+            int hitCount = rigidBody.Cast(move, contactFilter, hitBuffer, distance + 0.01f);
 
             for (int i = 0; i < hitCount; i++)
             {
@@ -85,7 +87,7 @@ public class PlayerController : MonoBehaviour
                     velocity.y = Mathf.Min(velocity.y, 0f);
                 }
 
-                distance = Mathf.Min(hitDistance, distance);
+                distance = Mathf.Min(hitDistance - 0.01f, distance);
             }
 
             rigidBody.position += move.normalized * distance;
